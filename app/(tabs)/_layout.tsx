@@ -44,12 +44,19 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="two"
+        name="cameraPage"
         options={{
-          title: 'Tab Two',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+          title: 'Camera',
+          tabBarIcon: ({ color }) => <TabBarIcon name="camera" color={color} />,
         }}
       />
+      {/* <Tabs.Screen
+        name='third'
+        options={{
+          title:'Tab Three',
+          tabBarIcon : ({color}) => <TabBarIcon color={color} name='code'/>
+        }}
+      /> */}
     </Tabs>
   );
 }
