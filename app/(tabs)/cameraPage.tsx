@@ -1,11 +1,27 @@
+import { useIsFocused } from '@react-navigation/native';
 import { Camera, CameraType } from 'expo-camera';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Button, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image } from 'react-native';
+
 
 export default function CameraScreen() {
 
+  const [photo, setPhoto] = useState('')
+  const isFocused = useIsFocused()
+  const cameraRef = useRef<Camera>(null)
   const [type, setType] = useState(CameraType.back);
   const [permission, requestPermission] = Camera.useCameraPermissions()
+
+
+
+  const takePicture = async () => {
+    if (cameraRef.current) {
+      const photo = await cameraRef.current.takePictureAsync();
+      console.log(photo)
+      setPhoto(photo.uri)
+    }
+  }
 
   if (!permission) {
     return <View />
@@ -21,14 +37,15 @@ export default function CameraScreen() {
   }
 
   return (
-    <View style={styles.container}>
       <View style={styles.container}>
-        <Camera style={styles.camera} type={type}>
-        </Camera>
+        <View style={styles.container}>
+          
+          {!photo?<Camera style={styles.camera} autoFocus type={type} ref={cameraRef} />:<Image source={{uri:photo}} style={styles.camera}/>}
 
+        </View>
+        <Button onPress={takePicture} title='Take picture' />
+        <Button onPress={() => setType(type == CameraType.back ? CameraType.front : CameraType.back)} title='flip' />
       </View>
-      <Button onPress={() => setType(type == CameraType.back ? CameraType.front : CameraType.back)} title='flip' />
-    </View>
   )
 }
 
@@ -36,11 +53,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
-    // paddingVertical: 30
   },
   camera: {
     flex: 1,
-    aspectRatio: 3/4
+    aspectRatio: 3 / 4
   },
   buttonContainer: {
     flex: 1,
