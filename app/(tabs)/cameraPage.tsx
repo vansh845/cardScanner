@@ -1,77 +1,97 @@
-import { useIsFocused } from '@react-navigation/native';
-import { Camera, CameraType } from 'expo-camera';
-import { useRef, useState } from 'react';
-import { Button, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View, Button } from 'react-native';
+import { BarCodeEvent, BarCodeScanner } from 'expo-barcode-scanner';
+import { Camera } from 'expo-camera';
 
+export default function App() {
+  const [hasPermission, setHasPermission] = useState(false);
+  const [scanned, setScanned] = useState(false);
 
-export default function CameraScreen() {
+  useEffect(() => {
+    (async () => {
+      const { status } = await BarCodeScanner.requestPermissionsAsync();
+      setHasPermission(status === 'granted');
+    })();
+  }, []);
 
-  const [photo, setPhoto] = useState('')
-  const isFocused = useIsFocused()
-  const cameraRef = useRef<Camera>(null)
-  const [type, setType] = useState(CameraType.back);
-  const [permission, requestPermission] = Camera.useCameraPermissions()
+  const handleBarCodeScanned = ({ type, data }:BarCodeEvent) => {
+    setScanned(true);
+    alert(`${data}`);
+  };
 
-
-
-  const takePicture = async () => {
-    if (cameraRef.current) {
-      const photo = await cameraRef.current.takePictureAsync();
-      console.log(photo)
-      setPhoto(photo.uri)
-    }
-  }
-
-  if (!permission) {
-    return <View />
-  }
-
-  if (!permission.granted) {
+  const renderCamera = () => {
     return (
-      <View>
-        <Text>permission not granted</Text>
-        <Button onPress={requestPermission} title="Grant Permission" />
+      <View style={styles.cameraContainer}>
+        <BarCodeScanner
+          onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
+          style={styles.camera}
+        />
       </View>
-    )
+    );
+  };
+
+  if (hasPermission === null) {
+    return <View />;
+  }
+
+  if (hasPermission === false) {
+    return (
+      <View style={styles.container}>
+        <Text >Camera permission not granted</Text>
+      </View>
+    );
   }
 
   return (
-      <View style={styles.container}>
-        <View style={styles.container}>
-          
-          {!photo?<Camera style={styles.camera} autoFocus type={type} ref={cameraRef} />:<Image source={{uri:photo}} style={styles.camera}/>}
-
-        </View>
-        <Button onPress={takePicture} title='Take picture' />
-        <Button onPress={() => setType(type == CameraType.back ? CameraType.front : CameraType.back)} title='flip' />
-      </View>
-  )
+    <View style={styles.container}>
+      <Text style={styles.title}>Welcome to the Barcode Scanner App!</Text>
+      <Text style={styles.paragraph}>Scan a barcode to start your job.</Text>
+      {renderCamera()}
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => setScanned(false)}
+        disabled={scanned}
+      >
+        <Text style={styles.buttonText}>Scan QR to Start your job</Text>
+      </TouchableOpacity>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    alignItems: 'center',
     justifyContent: 'center',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
+  paragraph: {
+    fontSize: 16,
+    marginBottom: 40,
+  },
+  cameraContainer: {
+    width: '80%',
+    aspectRatio: 1,
+    overflow: 'hidden',
+    borderRadius: 10,
+    marginBottom: 40,
   },
   camera: {
     flex: 1,
-    aspectRatio: 3 / 4
-  },
-  buttonContainer: {
-    flex: 1,
-    flexDirection: 'row',
-    backgroundColor: 'transparent',
-    margin: 64,
   },
   button: {
-    flex: 1,
-    alignSelf: 'flex-end',
-    alignItems: 'center',
+    backgroundColor: 'blue',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 5,
   },
-  text: {
-    fontSize: 24,
-    fontWeight: 'bold',
+  buttonText: {
     color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
